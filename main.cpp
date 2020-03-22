@@ -1,7 +1,7 @@
-ï»¿// jg.cpp : Ten plik zawiera funkcjÄ™ â€mainâ€. W nim rozpoczyna siÄ™ i koÅ„czy wykonywanie programu.
+// jg.cpp : Ten plik zawiera funkcjê „main”. W nim rozpoczyna siê i koñczy wykonywanie programu.
 //
 
-#include "pch.h"
+//#include "pch.h"
 
 
 #include <iostream>
@@ -13,15 +13,19 @@
 using namespace std;
 int time, time2;
 int rozmiar;
+
 struct problem {
 	int r;
 	int p;
 	int q;
-	bool operator < (const problem& x)const
-	{
-		return r < x.r;
+	bool operator ()( problem x,  problem y)const
+	{	
+		
+			
+			
+			return x.r < y.r;
 	}
-};
+}myobject;
 
 ostream& operator<< (ostream& wyjscie, const problem& pom) {
 	return wyjscie << "r: " << pom.r << "p: " << pom.p << "q: " << pom.q << endl;
@@ -32,30 +36,23 @@ std::vector < problem > tab;
 int naturalne(int n, vector <problem>& tab) {
 	problem t1 = tab[0];
 	problem t2;
-	problem t3;
-	int czas = t1.r;
-	int czas2;
-	for (int i = 0; i < n; i++) {
+	int S = t1.r;  
+	int C=S+t1.p;
+	int cmax=C+t1.q;
+	
+	for (int i = 1; i < n-1; i++) {
+		
 		t2 = tab[i];
-
-		czas = czas + t2.p;
-
-		if (i < n - 1) {
-			t3 = tab[i + 1];
-			czas2 = t2.q - t3.p;
-
-			if (czas2 < 0) czas2 = 0;
-
-
-			if (t3.r > czas) {
-				czas = czas + (t3.r - czas);
-			}
-		}
-		if (czas2 == 0) czas2 = t2.q;
+		
+		S = max(t2.r, C);
+		C = S + t2.p;
+		cmax = max(cmax, C + t2.q);
+		
 	}
-	czas = czas + czas2;
 
-	return czas;
+	return cmax;
+
+
 }
 
 int main()
@@ -70,7 +67,7 @@ int main()
 		plik >> liczba;
 
 
-		//int n = 0;
+		
 		string pomoc;
 		plik >> pomoc;
 		while (!plik.eof())
@@ -80,19 +77,22 @@ int main()
 			tab.push_back(tmp);
 
 		}
-		for (int i = 0; i < tab.size(); i++) {
-			cout << tab[i] << endl;
-		}
+		
 		rozmiar = tab.size();
 		plik.close();
+		
 
 	}
+	tab.erase(tab.end() - 1);// USUWANIE OSTATNIEGO ELEMENTU TABLICY, BO DWA RAZY CZYTA£ 
+	
+
 	time = naturalne(rozmiar, tab);
 	cout << "Czas pierwszy: " << time << endl;
-	sort(tab.begin(), tab.end());
-	for (int i = 0; i < tab.size(); i++) {
-		cout << tab[i] << endl;
-	}
+	
+
+	sort(tab.begin(), tab.end(), myobject);
+
+	
 	time2 = naturalne(rozmiar, tab);
 	cout << "Czas drugi: " << time2 << endl;
 }
