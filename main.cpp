@@ -11,34 +11,42 @@
 #include <algorithm>
 #include <vector>
 #include <chrono>
+#include <chrono>
 using namespace std;
-int  time2, time3, time4, time5, time6;
-int rozmiar;
+
+
+
+
 
 class problem {
 public:
-	int r;
-	int p;
-	int q;
-	int numer_zadania = 0;
+	int lp=0;//numer zadania
+	int r=0;
+	int p=0;
+	int q=0;
+	
 
 };
 std::vector < problem > G;
 std::vector < problem > N;
 std::vector < problem > TMP;
 
+struct zwrot {
+	int czas;
+	vector <int> perm;
+};
 
-
+zwrot z1, z2, z3, z4, z5, z6;
 
 bool cmp_r(const problem& a, const problem& b)
 {
-	// smallest comes first
+	
 	return a.r < b.r;
 }
 
 bool cmp_q(const problem& a, const problem& b)
 {
-	// smallest comes first
+	
 	return a.q > b.q;
 }
 
@@ -46,24 +54,34 @@ bool cmp_q(const problem& a, const problem& b)
 //DRUGA WERSJA, BO ROBILIŚMY OSOBNO I LOGIKI DZIAŁAJĄ ODWROTNIE
 bool cmp_r2(const problem& a, const problem& b)
 {
-
+	
 	return a.r > b.r;
 }
 
 bool cmp_q2(const problem& a, const problem& b)
 {
-
+	
 	return a.q < b.q;
 }
 
 
+void przypisz(vector<int>& w1, vector<problem>& w2) {
 
+	for (int i = 0; i < w2.size(); i++) w1.push_back(w2[i].lp);
+}
+
+/*
+void przypisz2(vector<problem>& w1, vector<problem>& w2) {
+
+	for (int i = 0; i < w2.size(); i++) w1.push_back(w2[i]);
+}
+*/
 
 ostream& operator<< (ostream& wyjscie, const problem& pom) {
 	return wyjscie << "r: " << pom.r << "p: " << pom.p << "q: " << pom.q << endl;
 }
 
-
+int naturalne(int n, vector <problem>& tab);
 
 
 struct Compare_R {
@@ -91,11 +109,13 @@ std::priority_queue <  problem, vector<problem>, Compare_Q > TMP1;
 std::priority_queue <  problem, vector<problem>, Compare_R > N2;
 
 
-int schrag2(int n, vector <problem>& tab) {
+zwrot schrag2(int n, vector <problem>& tab, vector <problem>& perm ) { //perm mial byc uzyty do alg Carliera
 	int czas = 0;
 	int czas2 = 0;
 	int czas_q = 0;
 	problem pom1;
+
+
 
 	for (int i = 0; i < n; i++) N1.push(tab[i]);
 
@@ -158,21 +178,23 @@ int schrag2(int n, vector <problem>& tab) {
 
 	}
 	czas = czas + czas_q;
-
-	return czas;
+	z1.czas = czas;
+	
+	przypisz(z1.perm, G1);
+	//przypisz2(perm, G1);//do Carliera
+	return z1;
 }
 
 
-int naturalne(int n, vector <problem>& tab);
 
 
-//ALGORYTM SCHRAGE Z PRZERWANIAMI
+
+
 int schrage_przerwania(int n, vector <problem> tab) {
 	int czas;
 	problem  l, e;
-	l.q = 0; //inicjalizacja
 	int cmax = 0;
-	vector<problem> N2; //lokalnie, ponieważ nadpisywało się ze zwykłym schrage 
+	vector<problem> N2; //lokalnie, ponieważ nadpisywało się ze zwykłym schrage
 	vector<problem> G2;
 	sort(tab.begin(), tab.end(), cmp_r2); // Sortujemy po r rosnaco
 
@@ -191,13 +213,13 @@ int schrage_przerwania(int n, vector <problem> tab) {
 		{
 
 			e = N2.back();
-			G2.push_back(e); //przeniesienie nieuszeregowane -> gotowe 
-			N2.pop_back();	//
+			G2.push_back(e);//przeniesienie nieuszeregowane -> gotowe 
+			N2.pop_back();//
 			if (e.q > l.q)
 			{
-				l.p = czas - e.r; //usunięcie czasu czesci juz zrobionego zadania
+				l.p = czas - e.r;//usunięcie czasu czesci juz zrobionego zadania
 				czas = e.r;
-				if (l.p > 0) //czy cale skonczone
+				if (l.p > 0)//czy cale skonczone
 				{
 					G2.push_back(l);
 				}
@@ -206,10 +228,10 @@ int schrage_przerwania(int n, vector <problem> tab) {
 		if (!G2.empty())
 		{
 			sort(G2.begin(), G2.end(), cmp_q2); //sortowanie po q 
-			czas = czas + G2.back().p; //czas 
-			cmax = max(cmax, czas + G2.back().q); //pełny czas
+			czas = czas + G2.back().p;//czas
+			cmax = max(cmax, czas + G2.back().q);//pełny czas
 			l = G2.back();
-			G2.pop_back(); //zrobione
+			G2.pop_back();//zrobione
 		}
 		else
 		{
@@ -217,16 +239,18 @@ int schrage_przerwania(int n, vector <problem> tab) {
 		}
 
 	}
-
 	return cmax;
+	
+	
+	
 }
 
 
-//ALGORYTM SCHRAGE Z PRZERWANIAMI PRZY UŻYCIU KOLEJEK PRIORYTETOWYCH
-int schrage_przerwania2(int n, vector <problem>& tab) {
+
+int schrage_przerwania2(int n, vector <problem>& tab) { //schrage_przerwania na kolejkach priotytetowych
 	int czas;
 	problem  l, e;
-	l.q = 0;
+
 	int cmax = 0;
 	std::priority_queue <  problem, vector<problem>, Compare_R > N;
 	std::priority_queue <  problem, vector<problem>, Compare_Q > G;
@@ -247,13 +271,13 @@ int schrage_przerwania2(int n, vector <problem>& tab) {
 		{
 
 			e = N.top();
-			G.push(e);
+			G.push(e);//przeniesienie nieuszeregowane -> gotowe 
 			N.pop();
 			if (e.q > l.q)
 			{
-				l.p = czas - e.r;
+				l.p = czas - e.r;//usunięcie czasu czesci juz zrobionego zadania
 				czas = e.r;
-				if (l.p > 0)
+				if (l.p > 0)//czy cale skonczone
 				{
 					G.push(l);
 				}
@@ -261,10 +285,10 @@ int schrage_przerwania2(int n, vector <problem>& tab) {
 		}
 		if (!G.empty())
 		{
-			czas = czas + G.top().p;
-			cmax = max(cmax, czas + G.top().q);
+			czas = czas + G.top().p;//czas
+			cmax = max(cmax, czas + G.top().q);//pelny czas
 			l = G.top();
-			G.pop();
+			G.pop();//zrobione
 		}
 		else
 		{
@@ -274,6 +298,7 @@ int schrage_przerwania2(int n, vector <problem>& tab) {
 	}
 
 	return cmax;
+
 }
 
 
@@ -283,7 +308,7 @@ int schrage_przerwania2(int n, vector <problem>& tab) {
 
 /*
 
-//Carlier
+//Carlier - none yet
 
 */
 
@@ -298,10 +323,7 @@ int schrage_przerwania2(int n, vector <problem>& tab) {
 
 
 
-
-
-
-int schrag(int n, vector <problem>& tab) {
+zwrot schrag(int n, vector <problem>& tab) {
 	int czas;
 	int czas2 = 0;
 	int czas_q = 0;
@@ -362,8 +384,9 @@ int schrag(int n, vector <problem>& tab) {
 
 	}
 	czas = czas + czas_q;
-
-	return czas;
+	z2.czas = czas;
+	przypisz(z2.perm, G);
+	return z2;
 }
 
 
@@ -394,16 +417,19 @@ int naturalne(int n, vector <problem>& tab) {
 
 }
 
-std::vector < problem > tab;
+
 
 
 int main()
 {
-	string linia;
+	
 	fstream plik;
 	int liczba_zadan = 0;
 	string pomoc;
-	plik.open("data200.txt", ios::in);
+	vector<problem> PI; //carlier
+	vector < problem > tab;
+	int time1, time2, time3, time4, time5, time6;
+	plik.open("data10.txt", ios::in);
 	if (plik.good() == true)
 	{
 
@@ -416,6 +442,7 @@ int main()
 		{
 			problem tmp;
 			plik >> tmp.r >> tmp.p >> tmp.q;
+			tmp.lp = i;
 			tab.push_back(tmp);
 		}
 
@@ -428,36 +455,60 @@ int main()
 
 
 
-	int time1;
 
 
+	//auto start1 = std::chrono::system_clock::now(); // POMIAR CZASU
 	time1 = naturalne(liczba_zadan, tab);
+	//auto end1 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz1 = end1 - start1;
+	//cout << "Czas wykonywania zwyklego " << cz1.count() << endl;
+	cout << "Czas naturalne: " << time1 << endl;
 
-	time3 = schrag(liczba_zadan, tab);
+	//auto start2 = std::chrono::system_clock::now();
+	z2.czas = schrag(liczba_zadan, tab).czas;
+	//auto end2 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz2 = end2 - start2;
+	//cout << "Czas wykonywania schrage " << cz2.count() << endl;
+	cout << "czas schrage:" << z2.czas << endl;
+	cout << "permutacja: " << endl;
+	for (int i = 0; i < z2.perm.size(); i++) cout << z2.perm[i] <<",";
+	cout << endl;
+	//auto start3 = std::chrono::system_clock::now();
+	z1.czas = schrag2(liczba_zadan, tab,PI).czas;
+	//for (int i = 0; i < PI.size(); i++) cout << PI[i].lp << ",";
+	//auto end3 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz3 = end3 - start3;
+	//cout << "Czas wykonywania schrage na kolejce " << cz3.count() << endl;
+	cout << "czas schrage na kolejce :" << z1.czas << endl;
+	//for (int i = 0; i < z2.perm.size(); i++) cout << z1.perm[i] << endl;
+	//auto start4 = std::chrono::system_clock::now();
+	z3.czas = schrage_przerwania(liczba_zadan, tab);
+	//auto end4 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz4 = end4 - start4;
+	//cout << "Czas wykonywania schrage z przerwaniami " << cz4.count() << endl;
+	cout << "czas schrage z przerwaniami:" << z3.czas << endl;
 
-	time4 = schrag2(liczba_zadan, tab);
+	//auto start5 = std::chrono::system_clock::now();
+	z4.czas = schrage_przerwania2(liczba_zadan, tab);
+	//auto end5 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz5 = end5 - start5;
+	//cout << "Czas wykonywania schrage z przerwaniami na kolejce" << cz5.count() << endl;
+	cout << "czas schrage z przerwaniami na kolejce:" << z4.czas << endl;
 
-	time5 = schrage_przerwania(liczba_zadan, tab);
-
-	time6 = schrage_przerwania2(liczba_zadan, tab);
-
+	//auto start6 = std::chrono::system_clock::now();
 	sort(tab.begin(), tab.end(), cmp_r);
 	time2 = naturalne(liczba_zadan, tab);
+	//auto end6 = std::chrono::system_clock::now();
+	//std::chrono::duration<double> cz6 = end6 - start6;
+	//cout << "Czas po sortowaniu" << cz6.count() << endl;
+
+	cout << "Czas po sortowaniu R:" << time2 << endl;
 
 
 
 
 
-	cout << "Czas naturalne: " << time1 << endl;
-	cout << "Czas po sortowaniu: " << time2 << endl;
-	cout << "czas schrage:" << time3 << endl;
-	cout << "czas schrage na kolejce :" << time4 << endl;
-	cout << "czas schrage z przerwaniami:" << time5 << endl;
-	cout << "czas schrage z przerwaniami na kolejce:" << time6 << endl;
+
+
 }
 
-// -------- INSTRUKCJE DO MIERZENIA CZASU NA POTEM DO SPRAWKA ------- //
-	  //auto start = std::chrono::system_clock::now(); // pomiar czasu - poczatek
-	  //auto end = std::chrono::system_clock::now(); // pomiar czasu - stop
-	  //std::chrono::duration<double> elapsed_seconds = end - start; // wynik - czas
-	  //cout << " " << elapsed_seconds.count() << " "; // wyswietlenie czasu
